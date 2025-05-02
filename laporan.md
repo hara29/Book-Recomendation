@@ -58,7 +58,7 @@ Variabel-variabel pada Ratings.csv dataset adalah sebagai berikut:
     - Dataset ini memiliki 278.858 baris dan 3 kolom
     - Data Age pada dataset ini banyak memiliki nilai kosong sehingga diperlukan imputasi.
     - Selain itu, data Age juga memiliki nilai yang tidak masuk akal untuk seorang pengguna yang melakukan review buku, yaitu di bawah 5 tahun dan diatas 90 tahun.
-      <img width="642" alt="Screenshot 2025-05-01 at 23 42 19" src="https://github.com/user-attachments/assets/309a21d8-c260-4a3a-acab-e720b4315a20" />
+      </br><img width="642" alt="Screenshot 2025-05-01 at 23 42 19" src="https://github.com/user-attachments/assets/309a21d8-c260-4a3a-acab-e720b4315a20" />
 
 3. Ratings.csv
     - Dataset ini memiliki 1.149.780 baris dan 3 kolom
