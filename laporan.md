@@ -15,12 +15,12 @@ Sumber: P. Mathew, B. Kuriakose and V. Hegde, "Book Recommendation System throug
 - Dengan data rating buku, bagaimana perusahaan dapat merekomendasikan buku - buku lainnya yang mungkin disukai dan belum pernah dibaca oleh pengguna? 
 
 ### Goals
-- Menghasilkan sejumlah rekomendasi restoran yang dipersonalisasi untuk pengguna dengan teknik content-based filtering.
-- Menghasilkan sejumlah rekomendasi restoran yang sesuai dengan preferensi pengguna dan belum pernah dikunjungi sebelumnya dengan teknik collaborative filtering.
+- Menghasilkan sejumlah rekomendasi buku yang dipersonalisasi untuk pengguna dengan teknik content-based filtering.
+- Menghasilkan sejumlah rekomendasi buku yang sesuai dengan preferensi pengguna dan belum pernah dibaca/ di-_rating_ sebelumnya dengan teknik collaborative filtering.
 
 ### Solution statements
 Untuk mencapai tujuan tersebut, digunakan dua pendekatan:
-- Content-Based Filtering: Rekomendasi didasarkan pada kesamaan fitur buku (judul, penulis, dll.).
+- Content-Based Filtering: Rekomendasi didasarkan pada kesamaan fitur buku (judul, penulis, penerbit.).
 - Collaborative Filtering: Rekomendasi didasarkan pada interaksi pengguna dan pola penilaian mereka terhadap buku.
 
 ## Data Understanding
@@ -75,12 +75,22 @@ Variabel-variabel pada Ratings.csv dataset adalah sebagai berikut:
 8. Berikut ini visualisasi pada data ratings eksplisit yang sudah dibersihkan.</br><img width="724" alt="Screenshot 2025-05-02 at 16 11 51" src="https://github.com/user-attachments/assets/52c768be-af7c-44a4-8415-2d65ec916efd" />
 9. Selanjutnya adalah persiapan data untuk pemodelan. Pada bagian ini, saya hanya akan menggunakan data unik untuk dimasukkan ke dalam proses pemodelan. Penghapusan data duplikat menggunakan fungsi drop_duplicates() pada kolom ISBN. Selanjutnya, konversi data series menjadi list menggunakan fungsi tolist() dari library numpy. Lalu, membuat dictionary untuk menentukan pasangan key-value pada data ISBN, Book-Title, Book-Author dan Publisher.
 10. Berikut ini visualisasi dari data jumlah buku yang diterbitkan per tahun setelah hasil drop duplicates pada ISBN.</br><img width="1068" alt="Screenshot 2025-05-02 at 16 12 00" src="https://github.com/user-attachments/assets/8139feab-cec5-4376-9fc3-2cf5e1c03db6" />
+11. Membuat kolom baru bernama "features" yang berisi gabungan string book-title, book-author, dan publisher untuk keperluan content based filtering.
+12. Saya menggunakan TF-IDF Vectorizer pada kolom features untuk menemukan representasi fitur penting dari setiap atribut buku.
+13. 
 
 ## Modeling
 ### Content Based Filtering
 Algoritma ini merekomendasikan item yang mirip dengan preferensi pengguna di masa lalu. Kelebihan dari algoritma ini adalah tidak memerlukan data pengguna lain karena hanya membuuhkan data - data setiap item untuk dicocokan dengan item yang mirip dengan item yang disukai pengguna di masa lalu. Kelemahan dari algoritma ini adalah rekomendasi yang dihasilkan hanya terbatas pada item yang serupa. Contohnya, ketika pengguna menyukai buku bertema romantis, maka rekomendasi yang dihasilkan sebatas buku - buku yang bertema romantis juga.
 
-Pada kasus ini, saya menggunakan TF-IDF Vectorizer untuk fitur Book-Title, Book-Author, dan Publisher. Kemudian dihitung kemiripan antar buku menggunakan cosine similarity. Top-5 buku paling mirip ditampilkan berdasarkan buku yang disukai pengguna. 
+Pada kasus ini, saya menggunakan cosine similarity untuk menghitung derajat kesamaan (similarity degree) antar "features" buku dengan teknik cosine similarity. Top-5 buku paling mirip ditampilkan berdasarkan buku yang disukai pengguna. Berikut contoh mencari 5 buku termirip dari buku "The Girl Who Loved Tom Gordon : A Novel" ISBN: 0684867621, dengan penulis Stephen King dan penerbit scribner:
+| book_title                  | idbook     | author       | publisher |
+|-----------------------------|------------|--------------|-----------|
+| The Girl Who Loved Tom Gordon | 0671042858 | Stephen King | Pocket  |
+| From a Buick 8 : A Novel    | 0743211375 | Stephen King | Scribner  |
+| Dreamcatcher                | 074343627X | Stephen King | Pocket    |
+| Dreamcatcher                | 0743211383 | Stephen King | Scribner  |
+| Dreamcatcher                | 0743467523 | Stephen King | Pocket    |
 
 ### Collaborative Filtering
 Untuk menyelesaikan permasalahan skalabilitas dan personalisasi dalam sistem rekomendasi, digunakan pendekatan collaborative filtering berbasis deep learning. Model ini dibangun menggunakan TensorFlow dan Keras, dengan merancang sebuah arsitektur bernama RecommenderNet. 
@@ -94,11 +104,34 @@ Langkah-langkah penting dalam modeling adalah:
 - Gunakan fungsi aktivasi sigmoid agar output berada dalam rentang [0,1].
 - Loss function: Binary Crossentropy. Optimizer: Adam. Evaluation metric: Root Mean Squared Error (RMSE).
 
-Setelah model dilatih, dilakukan inference untuk menghasilkan top-10 rekomendasi buku bagi pengguna yang diambil secara acak. Buku yang pernah diberi rating oleh pengguna akan dikecualikan. Rekomendasi diberikan berdasarkan skor prediksi tertinggi dari hasil model.
-
-Dengan demikian, sistem ini mampu menyelesaikan permasalahan pencarian buku yang relevan secara efisien dan personal dengan memberikan top-N rekomendasi untuk setiap pengguna.
+Setelah model dilatih, dilakukan inference untuk menghasilkan top-10 rekomendasi buku bagi pengguna yang diambil secara acak. Buku yang pernah diberi rating oleh pengguna akan dikecualikan. Rekomendasi diberikan berdasarkan skor prediksi tertinggi dari hasil model. Dengan demikian, sistem ini mampu menyelesaikan permasalahan pencarian buku yang relevan secara efisien dan personal dengan memberikan top-N rekomendasi untuk setiap pengguna.
 
 Kelebihan algoritma ini adalah mampu menangkap pola kompleks dan memberikan rekomendasi yang personal. Kekurangannya adalah, walaupun algoritma ini tidak membutuhkan data - data atau informasi mengenai item yang ada, tetapi algoritma ini membutuhkan data rating komunitas pengguna yang tentunya lebih banyak jumlahnya dan proses pelatihan yang lebih besar.
+
+Berikut contoh hasil top 10 rekomendasi untuk pengguna 243891
+
+Buku dengan Rating Tinggi dari Pengguna
+|  Judul  |	Penulis  |	Penerbit |
+|---------|----------|-----------|
+|Tears of the Giraffe (No.1 Ladies Detective Agency)| Alexander McCall Smith|	Anchor|
+|The Secret Life of Bees | Sue Monk Kidd |	Penguin Books|
+|Empire Falls |	Richard Russo |	Vintage Books USA|
+|Timeline	| MICHAEL CRICHTON | Ballantine Books|
+
+Top 10 Rekomendasi Buku
+| No. | Judul                                                  | Penulis          | Penerbit            |
+| :-- | :----------------------------------------------------- | :--------------- | :------------------ |
+| 1   | Charlotte's Web (Trophy Newbery)                       | E. B. White      | HarperTrophy        |
+| 2   | Harry Potter and the Prisoner of Azkaban (Book 3)      | J. K. Rowling    | Scholastic          |
+| 3   | Harry Potter and the Goblet of Fire (Book 4)           | J. K. Rowling    | Scholastic Paperbacks |
+| 4   | Harry Potter and the Prisoner of Azkaban (Book 3)      | J. K. Rowling    | Scholastic          |
+| 5   | Harry Potter and the Goblet of Fire (Book 4)           | J. K. Rowling    | Scholastic          |
+| 6   | Harry Potter and the Sorcerer's Stone (Book 1)         | J. K. Rowling    | Scholastic          |
+| 7   | The Two Towers (The Lord of the Rings, Part 2)         | J.R.R. TOLKIEN   | Del Rey             |
+| 8   | Dune (Remembering Tomorrow)                            | Frank Herbert    | ACE Charter         |
+| 9   | Harry Potter and the Sorcerer's Stone (Book 1)         | J. K. Rowling    | Scholastic          |
+| 10  | The Return of the King (The Lord of the Rings, Part 3) | J.R.R. TOLKIEN   | Del Rey             |
+
 
 ## Evaluation
 ### Metrik Evaluasi
@@ -163,11 +196,72 @@ Dari 5 rekomendasi yang diberikan, 5 di antaranya adalah buku karya Stephen King
 
 Ini menunjukkan bahwa 100% rekomendasi yang diberikan sistem berbasis konten relevan, mengindikasikan bahwa model efektif dalam mengenali kesamaan konten.
 
+## 1. Apakah Hasil Model Menjawab Setiap *Problem Statement*?
+
+### ✅ Problem Statement 1:
+**Bagaimana cara membuat sistem rekomendasi yang dipersonalisasi dengan teknik content-based filtering?**
+
+**Jawaban:**  
+Ya. Model content-based filtering yang dibangun berhasil menghasilkan rekomendasi yang dipersonalisasi berdasarkan fitur buku. Dalam contoh kasus buku "The Girl Who Loved Tom Gordon", sistem merekomendasikan 5 buku lain yang semuanya ditulis oleh penulis yang sama (Stephen King) dan diterbitkan oleh penerbit serupa. Ini menunjukkan kemampuan sistem dalam mengidentifikasi kesamaan konten untuk personalisasi, dengan precision mencapai 1.0 (100% relevan).
+
+---
+
+### ✅ Problem Statement 2:
+**Dengan data rating buku, bagaimana perusahaan dapat merekomendasikan buku-buku lainnya yang mungkin disukai dan belum pernah dibaca oleh pengguna?**
+
+**Jawaban:**  
+Ya. Model collaborative filtering yang digunakan mampu merekomendasikan buku berdasarkan pola rating pengguna lain yang serupa. Hasil evaluasi menunjukkan Precision@10 sebesar 0.8389 (sekitar 84% dari 10 rekomendasi teratas relevan) dan Recall@10 sebesar 0.6089 (lebih dari 60% item relevan berhasil direkomendasikan). Nilai RMSE validasi yang rendah (0.1991) juga mengindikasikan akurasi prediksi rating yang baik. Ini membuktikan model efektif dalam menyarankan buku baru yang kemungkinan besar disukai pengguna berdasarkan perilaku kolektif.
+
+---
+
+## 2. Apakah Berhasil Mencapai Setiap *Goal* yang Diharapkan?
+
+### ✅ Goal 1:
+**Menghasilkan sejumlah rekomendasi buku yang dipersonalisasi untuk pengguna dengan teknik content-based filtering.**
+
+**Status:**  
+Tercapai. Sistem content-based filtering telah berhasil dibuat dan mampu memberikan rekomendasi buku berdasarkan kesamaan fitur (konten) buku, seperti yang ditunjukkan pada contoh evaluasi dengan precision 1.0.
+
+---
+
+### ✅ Goal 2:
+**Menghasilkan sejumlah rekomendasi buku yang sesuai dengan preferensi pengguna dan belum pernah dibaca/ di-rating sebelumnya dengan teknik collaborative filtering.**
+
+**Status:**  
+Tercapai. Sistem collaborative filtering berhasil menghasilkan rekomendasi buku yang relevan (Precision@10 = 0.8389, Recall@10 = 0.6089) berdasarkan preferensi historis pengguna dan pengguna lain, serta mampu memprediksi rating dengan cukup akurat (RMSE = 0.1991).
+
+---
+
+## 3. Apakah Setiap *Solution Statement* Berdampak dan Efektif?
+
+### 🔹 Solution 1:
+**Menggunakan Content-Based Filtering: Rekomendasi didasarkan pada kesamaan fitur buku (judul, penulis, penerbit.).**
+
+**Evaluasi Dampak:**  
+- Pendekatan ini terbukti efektif dalam menemukan item yang secara intrinsik mirip.
+- Dalam kasus uji, model berhasil mengidentifikasi buku-buku lain dari penulis yang sama (Stephen King), menunjukkan pemahaman konteks dan fitur yang kuat.
+- Tingkat presisi 1.0 pada kasus uji menegaskan bahwa rekomendasi yang dihasilkan sangat relevan berdasarkan konten, cocok untuk pengguna yang mencari buku serupa dengan yang sudah mereka sukai.
+- Metode ini independen dari data pengguna lain, berguna saat data interaksi pengguna terbatas.
+
+---
+
+### 🔹 Solution 2:
+**Menggunakan Collaborative Filtering: Rekomendasi didasarkan pada interaksi pengguna dan pola penilaian mereka terhadap buku.**
+
+**Evaluasi Dampak:**  
+- Pendekatan ini efektif dalam menangkap preferensi pengguna yang mungkin tidak terlihat hanya dari fitur buku (serendipity).
+- Metrik evaluasi (Precision@10 = 0.8389, Recall@10 = 0.6089) menunjukkan bahwa sebagian besar rekomendasi relevan dan sistem mampu menjangkau item-item yang disukai pengguna.
+- RMSE yang rendah (0.1991) menunjukkan kemampuan prediksi rating yang baik, meningkatkan kepercayaan pada kualitas rekomendasi.
+- Metode ini mampu merekomendasikan item yang beragam (tidak harus mirip secara konten) selama disukai oleh pengguna dengan selera serupa.
+- Efektivitasnya bergantung pada ketersediaan data interaksi pengguna yang cukup.
+---
+
 ## Kesimpulan
-Dalam proyek ini, sistem rekomendasi buku dibangun untuk membantu pengguna menemukan buku yang sesuai dengan minat mereka di tengah banyaknya pilihan yang tersedia. Melalui dua pendekatan, yaitu content-based filtering dan collaborative filtering berbasis deep learning, sistem mampu memberikan rekomendasi yang akurat dan relevan.
+Hasil evaluasi sistem rekomendasi buku sepenuhnya mendukung tujuan awal proyek:
 
-Model collaborative filtering menunjukkan performa sangat baik dengan nilai RMSE rendah (0.1991) dan Precision@10 serta Recall@10 yang tinggi (0.8389 dan 0.6089), yang menunjukkan bahwa sistem dapat memberikan rekomendasi personal yang efektif dan efisien.
+✅ Semua problem statement terjawab dengan baik melalui implementasi kedua teknik filtering (Content-Based dan Collaborative).
+🎯 Kedua goals — menghasilkan rekomendasi personal berbasis konten dan rekomendasi relevan berbasis preferensi pengguna — tercapai secara penuh, didukung oleh metrik evaluasi yang solid (Precision, Recall, RMSE) dan contoh kasus yang menunjukkan relevansi tinggi.
+🚀 Solusi yang diterapkan, yaitu penggunaan Content-Based Filtering dan Collaborative Filtering, terbukti efektif dan berdampak positif dalam menyediakan rekomendasi buku yang akurat dan sesuai dengan kebutuhan pengguna.
+Kedua pendekatan menunjukkan nilai yang signifikan: Content-Based Filtering terbukti sangat andal dalam menemukan buku-buku dengan kesamaan fitur (seperti presisi 1.0 pada contoh kasus), ideal untuk pengguna yang mencari item serupa. Sementara itu, Collaborative Filtering menunjukkan kinerja kuat dalam menyajikan rekomendasi baru yang relevan berdasarkan pola perilaku pengguna (Precision@10 ≈ 84%, Recall@10 ≈ 61%), efektif untuk discovery.
 
-Sementara itu, content-based filtering berhasil menghasilkan rekomendasi yang konsisten dan relevan berdasarkan fitur konten buku, seperti judul dan nama penulis. Dengan precision 1.0, sistem mampu memberikan hasil yang cukup relevan tanpa bergantung pada data pengguna lain.
-
-Secara keseluruhan, kedua pendekatan saling melengkapi dan dapat digunakan dalam kombinasi (hybrid) untuk meningkatkan kualitas sistem rekomendasi buku secara keseluruhan.
+Kombinasi kedua metode ini sangat potensial untuk diimplementasikan pada platform buku digital atau e-commerce guna meningkatkan pengalaman pengguna, memperkaya penemuan buku, dan mendorong engagement secara keseluruhan.
